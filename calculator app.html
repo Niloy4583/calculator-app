@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: radial-gradient(circle at top, #f8fafc 0%, #dbeafe 45%, #e2e8f0 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .calculator {
+      width: 320px;
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
+    }
+
+    .display {
+      padding: 1.5rem;
+      background: #1e293b;
+      color: #f8fafc;
+      text-align: right;
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      min-height: 4.5rem;
+      word-wrap: break-word;
+    }
+
+    .display small {
+      display: block;
+      color: rgba(248, 250, 252, 0.7);
+      font-size: 0.9rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.8rem;
+      padding: 1.5rem;
+      background: #f8fafc;
+    }
+
+    .btn-calculator {
+      border-radius: 1rem;
+      height: 3.75rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .btn-calculator.operator {
+      background: #6366f1;
+      color: #ffffff;
+    }
+
+    .btn-calculator.action {
+      background: #f97316;
+      color: #ffffff;
+    }
+
+    .btn-calculator.equal {
+      grid-column: span 2;
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .btn-calculator.zero {
+      grid-column: span 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator shadow">
+    <div class="display" id="calculatorDisplay">
+      <small id="calculatorExpression">0</small>
+      <span id="calculatorResult">0</span>
+    </div>
+    <div class="button-grid">
+      <button class="btn btn-light btn-calculator action" onclick="clearCalculator()">AC</button>
+      <button class="btn btn-light btn-calculator action" onclick="toggleSign()">±</button>
+      <button class="btn btn-light btn-calculator action" onclick="appendPercent()">%</button>
+      <button class="btn btn-calculator operator" onclick="appendOperator('/')">÷</button>
+
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('7')">7</button>
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('8')">8</button>
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('9')">9</button>
+      <button class="btn btn-calculator operator" onclick="appendOperator('*')">×</button>
+
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('4')">4</button>
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('5')">5</button>
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('6')">6</button>
+      <button class="btn btn-calculator operator" onclick="appendOperator('-')">−</button>
+
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('1')">1</button>
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('2')">2</button>
+      <button class="btn btn-light btn-calculator" onclick="appendNumber('3')">3</button>
+      <button class="btn btn-calculator operator" onclick="appendOperator('+')">+</button>
+
+      <button class="btn btn-light btn-calculator zero" onclick="appendNumber('0')">0</button>
+      <button class="btn btn-light btn-calculator" onclick="appendDecimal()">.</button>
+      <button class="btn btn-calculator equal" onclick="calculateResult()">=</button>
+    </div>
+  </div>
+
+  <script>
+    let expression = '';
+    let result = '0';
+
+    const expressionElement = document.getElementById('calculatorExpression');
+    const resultElement = document.getElementById('calculatorResult');
+
+    function updateDisplay() {
+      expressionElement.textContent = expression || '0';
+      resultElement.textContent = result;
+    }
+
+    function appendNumber(number) {
+      if (expression === '0') expression = number;
+      else expression += number;
+      result = evaluateExpression(expression);
+      updateDisplay();
+    }
+
+    function appendOperator(operator) {
+      if (!expression || /[+\-*/.]$/.test(expression)) {
+        expression = expression.slice(0, -1) + operator;
+      } else {
+        expression += operator;
+      }
+      result = evaluateExpression(expression);
+      updateDisplay();
+    }
+
+    function appendDecimal() {
+      const parts = expression.split(/[+\-*/]/);
+      const current = parts[parts.length - 1];
+      if (!current.includes('.')) {
+        expression += expression === '' || /[+\-*/]$/.test(expression) ? '0.' : '.';
+      }
+      result = evaluateExpression(expression);
+      updateDisplay();
+    }
+
+    function toggleSign() {
+      if (!expression) return;
+      const parts = expression.split(/([+\-*/])/);
+      const last = parts.pop();
+      if (last) {
+        const toggled = last.startsWith('-') ? last.slice(1) : '-' + last;
+        expression = parts.join('') + toggled;
+      }
+      result = evaluateExpression(expression);
+      updateDisplay();
+    }
+
+    function appendPercent() {
+      if (!expression) return;
+      const parts = expression.split(/([+\-*/])/);
+      const last = parts.pop();
+      if (last && !isNaN(last)) {
+        parts.push((parseFloat(last) / 100).toString());
+        expression = parts.join('');
+        result = evaluateExpression(expression);
+        updateDisplay();
+      }
+    }
+
+    function clearCalculator() {
+      expression = '';
+      result = '0';
+      updateDisplay();
+    }
+
+    function calculateResult() {
+      if (!expression) return;
+      result = evaluateExpression(expression);
+      expression = result.toString();
+      updateDisplay();
+    }
+
+    function evaluateExpression(expr) {
+      try {
+        const sanitized = expr.replace(/÷/g, '/').replace(/×/g, '*');
+        const value = Function('return ' + sanitized)();
+        return String(Number.isFinite(value) ? parseFloat(value.toFixed(8)) : 'Error');
+      } catch {
+        return 'Error';
+      }
+    }
+
+    clearCalculator();
+  </script>
+</body>
+</html>
